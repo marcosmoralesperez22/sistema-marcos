@@ -1,0 +1,20 @@
+msgid "sync_title"
+msgstr "MARCOS SYNC"
+
+msgid "steps_label"
+msgstr "STEPS TODAY"
+
+msgid "calories_label"
+msgstr "CALORIES"
+
+msgid "sync_button"
+msgstr "SYNC DATA"
+
+msgid "sync_success"
+msgstr "Synced!"
+
+msgid "sync_error"
+msgstr "Network Error"
+
+msgid "no_connection"
+msgstr "No Connection"

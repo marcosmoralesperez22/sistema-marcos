@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sistema MARCOS" />
+  <title>MarcosOS</title>
+
+  <!-- MarcosOS Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Styrene+A:wght@400;500&family=Tiempos+Headline:wght@400&display=swap"
+    rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
+    rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+
+<body>
+
+  <!-- MODAL DE FOCO -->
+  <div id="focus-overlay">
+    <div class="fo-label">Modo Foco · Pomodoro</div>
+    <div class="fo-modes" style="display:flex; gap:10px; margin-bottom:15px;" id="fo-modes">
+      <button class="fo-btn active" data-time="25">25m (Pomodoro)</button>
+      <button class="fo-btn" data-time="50">50m (Foco)</button>
+      <button class="fo-btn" data-time="90">90m (Sesión)</button>
+    </div>
+    <div class="fo-time" id="fo-time">25:00</div>
+    <select id="fo-task-select" class="mini-select"
+      style="margin-bottom: 20px; width: 100%; text-align: center; background: rgba(0,0,0,0.2) !important;">
+      <option value="">-- Sin tarea activa --</option>
+    </select>
+    <div class="fo-btns">
+      <button class="fo-btn primary" id="fo-toggle">Iniciar</button>
+      <button class="fo-btn" id="fo-reset">Reiniciar</button>
+      <button class="fo-btn" id="fo-close">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- NOTIFICACIONES TOAST -->
+  <div id="notif"></div>
+
+  <!-- TOPBAR -->
+  <div id="topbar"></div>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <div id="layout">
+
+    <!-- BARRA LATERAL -->
+    <nav id="sidebar"></nav>
+
+    <!-- ÁREA DE PÁGINA PRINCIPAL -->
+    <div id="main"></div>
+
+    <!-- PANEL DERECHO -->
+    <div id="right"></div>
+
+  </div>
+
+  <script type="module" src="/src/main.js?v=4"></script>
+</body>
+
+</html>
