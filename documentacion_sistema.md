@@ -1,7 +1,7 @@
 # Sistema-MARCOS (LifeCraft) - Documentación General
 
 ## 1. Visión General
-**Sistema-MARCOS** (también denominado internamente como *LifeCraft* o *Minecraft Life Dashboard*) es una aplicación web integral diseñada para funcionar como un "Dashboard de Vida" gamificado. Aplica conceptos de videojuegos RPG (como Minecraft y otros juegos de rol) a la vida real del usuario.
+**Sistema-MARCOS** es una aplicación web integral diseñada para funcionar como un "Dashboard de Vida" gamificado. Aplica conceptos de videojuegos RPG y planificación personal a la vida real del usuario.
 
 El objetivo principal es motivar y realizar un seguimiento del progreso personal del usuario (Marcos) a lo largo de sus días mediante misiones, hábitos sistemáticos, seguimiento de la salud y obtención de experiencia (XP)/Aura y medallas.
 

@@ -1,8 +1,10 @@
 // =============================================
-// DATABASE — PostgreSQL connection & schema
+// DATABASE - PostgreSQL connection & schema
 // =============================================
 
 import pg from 'pg';
+import { hashPassword, isPasswordHash, validatePasswordPolicy } from './security.js';
+
 const { Pool } = pg;
 
 const pool = new Pool({
@@ -10,8 +12,78 @@ const pool = new Pool({
   port: parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME || 'lifecraft',
   user: process.env.DB_USER || 'lifecraft',
-  password: process.env.DB_PASSWORD || 'lifecraft_secret',
+  password: process.env.DB_PASSWORD,
 });
+
+async function seedInitialUser(client) {
+  const username = process.env.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!username && !password) {
+    console.warn('[Auth] ADMIN_USERNAME/ADMIN_PASSWORD are not configured. Skipping default user seed.');
+    return;
+  }
+
+  if (!username || !password) {
+    throw new Error('ADMIN_USERNAME and ADMIN_PASSWORD must be provided together.');
+  }
+
+  if (!validatePasswordPolicy(password)) {
+    throw new Error('ADMIN_PASSWORD must be at least 12 characters long.');
+  }
+
+  await client.query(
+    `INSERT INTO users (username, password)
+     VALUES ($1, $2)
+     ON CONFLICT (username) DO NOTHING`,
+    [username, hashPassword(password)]
+  );
+
+  await client.query(
+    `INSERT INTO game_state (user_id, player, armor, settings)
+     SELECT u.id,
+       jsonb_build_object(
+         'name', u.username,
+         'title', 'Aprendiz',
+         'level', 1,
+         'xp', 0,
+         'xpToNext', 200,
+         'health', 20,
+         'maxHealth', 20,
+         'streak', 0,
+         'bestStreak', 0,
+         'lastActiveDate', NULL,
+         'totalProductiveHours', 0,
+         'totalTasksCompleted', 0
+       ),
+       '{"helmet":{"type":"leather","durability":100,"maxDurability":100},"chestplate":{"type":"leather","durability":100,"maxDurability":100},"leggings":{"type":"leather","durability":100,"maxDurability":100},"boots":{"type":"leather","durability":100,"maxDurability":100}}'::jsonb,
+       '{"difficulty":1.0,"soundEnabled":false,"fitnessStartDate":"2026-03-02"}'::jsonb
+     FROM users u
+     WHERE u.username = $1
+     ON CONFLICT (user_id) DO NOTHING`,
+    [username]
+  );
+}
+
+async function migratePlaintextPasswords(client) {
+  const result = await client.query('SELECT id, username, password FROM users');
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  for (const user of result.rows) {
+    if (isPasswordHash(user.password)) continue;
+
+    const replacementPassword =
+      adminUsername && adminPassword && user.username === adminUsername
+        ? adminPassword
+        : user.password;
+
+    await client.query(
+      'UPDATE users SET password = $1 WHERE id = $2',
+      [hashPassword(replacementPassword), user.id]
+    );
+  }
+}
 
 // Initialize schema
 export async function initDB() {
@@ -101,21 +173,12 @@ export async function initDB() {
         emoji VARCHAR(10),
         created_at TIMESTAMP DEFAULT NOW()
       );
-
-      -- Insert default user if not exists
-      INSERT INTO users (username, password) VALUES ('Marcos', 'admin')
-      ON CONFLICT (username) DO NOTHING;
-
-      -- Insert default game state for Marcos if not exists
-      INSERT INTO game_state (user_id, player, armor, settings)
-      SELECT u.id,
-        '{"name":"Marcos","title":"Aprendiz","level":1,"xp":0,"xpToNext":200,"health":20,"maxHealth":20,"streak":0,"bestStreak":0,"lastActiveDate":null,"totalProductiveHours":0,"totalTasksCompleted":0}'::jsonb,
-        '{"helmet":{"type":"leather","durability":100,"maxDurability":100},"chestplate":{"type":"leather","durability":100,"maxDurability":100},"leggings":{"type":"leather","durability":100,"maxDurability":100},"boots":{"type":"leather","durability":100,"maxDurability":100}}'::jsonb,
-        '{"difficulty":1.0,"soundEnabled":false,"fitnessStartDate":"2026-03-02"}'::jsonb
-      FROM users u WHERE u.username = 'Marcos'
-      ON CONFLICT (user_id) DO NOTHING;
     `);
-    console.log('✅ Database schema initialized');
+
+    await migratePlaintextPasswords(client);
+    await seedInitialUser(client);
+
+    console.log('Database schema initialized');
   } finally {
     client.release();
   }

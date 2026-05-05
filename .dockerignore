@@ -2,4 +2,27 @@ node_modules
 dist
 .env
 .git
+
+# Local data and credentials
+pgdata
+*.log
+*.json
+!package.json
+!package-lock.json
+google-service-account*.json
+linear-*.json
+calendar_dump*.json
+events_*.json
+google_raw_events.json
+output.json
+test_events.json
+
+# Development-only files
 *.md
+fix.js
+fix.cjs
+fix.py
+cleanup_habits.js
+update_subcats.cjs
+test_cal.js
+zeppos-samples

@@ -12,20 +12,16 @@ let auth;
 let calendar;
 
 try {
-    // Support credentials via env var (JSON string) or a local file path
-    if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-        const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-        auth = new google.auth.GoogleAuth({ credentials, scopes: SCOPES });
+    const credFile = process.env.GOOGLE_SERVICE_ACCOUNT_FILE
+        ? path.resolve(process.env.GOOGLE_SERVICE_ACCOUNT_FILE)
+        : path.join(__dirname, '..', 'google-service-account.json');
+
+    if (fs.existsSync(credFile)) {
+        auth = new google.auth.GoogleAuth({ keyFile: credFile, scopes: SCOPES });
     } else {
-        // Fallback: look for a credentials file specified by env var or default name
-        const credFile = process.env.GOOGLE_SERVICE_ACCOUNT_FILE
-            || path.join(__dirname, '..', 'google-service-account.json');
-        if (fs.existsSync(credFile)) {
-            auth = new google.auth.GoogleAuth({ keyFile: credFile, scopes: SCOPES });
-        } else {
-            console.warn('[Google Calendar] No credentials found. Calendar integration disabled.');
-        }
+        console.warn('[Google Calendar] No credentials found. Calendar integration disabled.');
     }
+
     if (auth) calendar = google.calendar({ version: 'v3', auth });
 } catch (err) {
     console.error('[Google Calendar] Failed to initialize client:', err.message);
