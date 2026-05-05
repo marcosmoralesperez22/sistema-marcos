@@ -1,173 +1,112 @@
-# Sistema-MARCOS — Gamified Life Dashboard
+# Sistema-MARCOS - Gamified Life Dashboard
 
-A personal productivity system that applies RPG game mechanics to real life. Complete quests, build habits, track health metrics from your smartwatch, and watch your character level up as you become more productive.
+A personal productivity system that applies RPG mechanics to real life: quests, habits, health metrics, planning, achievements, stats and focus sessions.
 
-Built with Vanilla JS + Node.js + PostgreSQL + Docker.
+Built with Vanilla JS, Node.js, Express, PostgreSQL and Docker.
 
----
-
-## What it does
+## Features
 
 | Module | Description |
-|--------|-------------|
-| **Dashboard** | Smart messages, player stats (HP, XP, Level, Streak), today's tasks at a glance |
-| **Quests** | One-off tasks that reward XP and Aura points on completion |
-| **Habits** | Daily recurring check-ins with auto-check from wearable data |
-| **Health** | Biometric data from Amazfit smartwatch (steps, sleep, calories) |
-| **Roadmaps** | Visual month/year planner with an interactive node editor |
-| **Achievements** | Zoomable, pannable skill tree that unlocks based on your history |
-| **Stats** | Charts showing Aura trends, mission completion rate, and discipline streaks |
-| **Pomodoro** | Focus timer that rewards Aura on successful sessions |
-| **Calendar** | Time machine — see what you did on any past date |
+| --- | --- |
+| Dashboard | Smart messages, player stats, streaks and today's tasks |
+| Quests | One-off tasks with XP and reward tiers |
+| Habits | Daily recurring check-ins |
+| Health | Steps, sleep and calories from wearable sync |
+| Roadmaps | Month/year planner with an interactive node editor |
+| Achievements | Zoomable skill tree unlocked by progress |
+| Stats | Charts for trends, completion and streaks |
+| Pomodoro | Focus timer with rewards |
+| Calendar | Past-date view and optional Google Calendar events |
 
----
+## Tech Stack
 
-## Tech stack
+- Frontend: Vanilla JS SPA, Vite, custom router
+- Backend: Node.js, Express REST API
+- Database: PostgreSQL 16
+- Auth: `express-session` plus Node `crypto.scrypt` password hashing
+- Wearable: Zepp OS companion app
+- Calendar: optional Google Calendar service account
+- Deploy: Docker and Docker Compose
 
-- **Frontend**: Vanilla JS SPA, Vite bundler, custom router, no framework
-- **Backend**: Node.js + Express REST API
-- **Database**: PostgreSQL 16
-- **Auth**: express-session with bcrypt
-- **Wearable**: Zepp OS app for Amazfit watches (syncs steps, sleep, calories via HTTP)
-- **Calendar**: Google Calendar API (optional, via service account)
-- **Deploy**: Docker + Docker Compose
+## Quick Start
 
----
-
-## Quick start
-
-### Option A — Docker (recommended)
+### Docker
 
 ```bash
 git clone https://github.com/marcosmoralesperez22/sistema-marcos.git
 cd sistema-marcos
-
-# Copy and edit environment variables
 cp .env.example .env
-# Edit .env with your own secrets
+```
 
-# Build and start everything
+Edit `.env` and set unique values for `DB_PASSWORD`, `SESSION_SECRET`, `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
+
+```bash
 docker compose up --build -d
 ```
 
-Open http://localhost:3000 and log in with **Marcos / admin** (change this immediately in the DB or via the settings page).
+Open http://localhost:3000 and log in with the admin credentials from your local `.env`.
 
-### Option B — Local development
+### Local Development
 
-**Requirements**: Node.js 20+, PostgreSQL 16+
+Requirements: Node.js 20+ and PostgreSQL 16+.
 
 ```bash
-git clone https://github.com/marcosmoralesperez22/sistema-marcos.git
-cd sistema-marcos
-
 npm install
 cp .env.example .env
-# Edit .env — set DB_* vars to point to your local Postgres instance
-
-# Terminal 1: start the backend
 npm run server
-
-# Terminal 2: start the frontend dev server
 npm run dev
 ```
 
----
+The Vite dev server proxies `/api` to the Express server.
 
-## Environment variables
-
-See [`.env.example`](.env.example) for the full list.
+## Environment Variables
 
 | Variable | Required | Description |
-|----------|----------|-------------|
+| --- | --- | --- |
 | `DB_HOST` | Yes | PostgreSQL host |
-| `DB_PORT` | Yes | PostgreSQL port (default 5432) |
-| `DB_NAME` | Yes | Database name |
-| `DB_USER` | Yes | Database user |
-| `DB_PASSWORD` | Yes | Database password |
-| `SESSION_SECRET` | Yes | Random string for session signing |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | No | Full JSON of your Google service account (for Calendar) |
-| `GOOGLE_SERVICE_ACCOUNT_FILE` | No | Path to your service account JSON file (never commit this) |
+| `DB_PORT` | Yes | PostgreSQL port |
+| `DB_NAME` | Yes | PostgreSQL database name |
+| `DB_USER` | Yes | PostgreSQL user |
+| `DB_PASSWORD` | Yes | PostgreSQL password |
+| `ADMIN_USERNAME` | Yes | Initial admin username |
+| `ADMIN_PASSWORD` | Yes | Initial admin password, at least 12 characters |
+| `SESSION_SECRET` | Yes | Random session signing secret, at least 32 characters |
+| `COOKIE_SECURE` | No | Set `true` behind HTTPS |
+| `TRUST_PROXY` | No | Set `true` when deployed behind a trusted reverse proxy |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` | No | Path to a local Google service account key outside the repo |
 
----
+## Security Notes
 
-## Google Calendar integration (optional)
+- `.env`, PostgreSQL data, logs, local JSON keys and data dumps are ignored by Git.
+- Passwords are stored as `scrypt` hashes, not plaintext.
+- The login route includes a basic in-memory failed-attempt limiter.
+- Sessions use HTTP-only cookies and regenerate the session ID after login.
+- Do not commit Google service account keys. If a real key was ever committed or shared, revoke and rotate it in Google Cloud before publishing the repository.
 
-The dashboard can pull events from Google Calendar to show them in the Calendar view.
+## Google Calendar Integration
 
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable the **Google Calendar API**
-3. Create a **Service Account** and download the JSON key
-4. Share your calendar with the service account email
-5. Set `GOOGLE_SERVICE_ACCOUNT_JSON` in your `.env` (paste the full JSON as a one-liner)
+The Calendar module can read events from Google Calendar.
 
-The app works fine without this — the Calendar module just won't show Google events.
+1. Enable the Google Calendar API in Google Cloud.
+2. Create a service account and download its JSON key.
+3. Store that key outside the repository or in a local ignored file.
+4. Share the calendar with the service account email.
+5. Set `GOOGLE_SERVICE_ACCOUNT_FILE` in `.env`.
 
----
+The app works without this integration.
 
-## Zepp OS watch app
+## Project Structure
 
-The `zepp-sync-app/` folder contains the companion app for **Amazfit** watches running Zepp OS 3+. It reads steps, calories and sleep data from the watch sensors and POSTs them to `/api/zepp/sync` so the dashboard stays updated automatically.
-
-### Deploy to watch
-
-1. Install [Zepp Dev Tools](https://docs.zepp.com/docs/watchface/tools/simulator/)
-2. Open `zepp-sync-app/` in the editor
-3. Set your dashboard URL in `zepp-sync-app/app.json` → `serverUrl`
-4. Build and install on your watch
-
----
-
-## Project structure
-
+```text
+server/             Express API, auth, database and calendar client
+src/                Frontend SPA
+public/             Static assets
+marcos-sync/        Zepp OS companion app
+docker-compose.yml  Local Docker stack
+Dockerfile          Production container
+vite.config.js      Vite configuration
 ```
-├── server/
-│   ├── index.js          # Express entry point
-│   ├── db.js             # PostgreSQL pool + schema init
-│   ├── calendar.js       # Google Calendar client
-│   └── routes/
-│       ├── api.js        # Game state CRUD, Zepp sync
-│       └── auth.js       # Login / logout
-├── src/
-│   ├── main.js           # Frontend entry point
-│   ├── router.js         # Client-side SPA router
-│   ├── data/store.js     # Global state + localStorage sync
-│   ├── components/       # Sidebar, right panel, etc.
-│   └── pages/            # One file per route
-├── zepp-sync-app/        # Amazfit watch application
-├── docker-compose.yml
-├── Dockerfile
-└── vite.config.js
-```
-
----
-
-## How to adapt it for yourself
-
-This system is built around my personal workflow, but you can fork it and make it yours:
-
-- **Change the default user**: edit the `INSERT INTO users` seed in `server/db.js`
-- **Add quest categories**: they're defined in `src/data/` — fully customizable
-- **Tweak XP formulas**: look for `xp` and `aura` calculations in `src/pages/`
-- **Add new achievements**: `src/pages/achievements.js` has the full tree — add a new node and a `checkAllAchievements()` rule
-- **Different wearable**: replace `zepp-sync-app/` with any device that can POST JSON to `/api/zepp/sync`
-
----
-
-## Ideas for improvement / contributions welcome
-
-- [ ] Multi-user support (currently single-user only)
-- [ ] Mobile-responsive layout
-- [ ] Notifications / reminders (push or email)
-- [ ] Export data to CSV / JSON
-- [ ] Dark/light theme toggle
-- [ ] Plugin system for custom modules
-- [ ] Public API so other apps can read your stats
-- [ ] iOS / Android companion app
-
-If you build any of these, PRs are welcome!
-
----
 
 ## License
 
-MIT — do whatever you want with it.
+MIT
